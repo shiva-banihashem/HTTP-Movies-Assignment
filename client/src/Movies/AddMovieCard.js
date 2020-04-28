@@ -5,8 +5,8 @@ import axios from "axios";
 import "../form.css";
 
 export default function AddMovieCard(props) {
-  console.log("props in add",props.movies);
-  let max = ""
+  
+  let max = 0
   let maxMovie = {}
   if (props.movies.length>1) {
     maxMovie  = props.movies.reduce((prev, current) =>
@@ -17,7 +17,7 @@ export default function AddMovieCard(props) {
     max = props.movies[0].id
   let id = max+1;
 
- console.log("id:", id);
+ 
   const { register, handleSubmit, errors } = useForm();
   const [newMovie,setNewMovie]=useState(
     {
@@ -25,19 +25,18 @@ export default function AddMovieCard(props) {
         title: '',
         director: '',
         metascore: null,
-        stars: []
+        stars: ""
       }
   );
 
-  const [newStar,setNewStar] = useState();
-  const [stars,setStars]= useState([]);
+  
   
   
     const handleChange = (e) => {
      
       setNewMovie({
         ...newMovie,
-        [e.target.name]: e.target.value,id:props.id
+        [e.target.name]: e.target.value,id:id
       })
       }      
     
@@ -47,41 +46,41 @@ export default function AddMovieCard(props) {
 
     const onHandleSubmit = (e) => {
         
-        e.preventDefault();
-
         
-        console.log("in Add movieCard submit");
-              
+        const addedData = {...newMovie, stars: newMovie.stars.split(',')}
+        console.log(addedData);
+       
+       axios
+         .post("http://localhost:5000/api/movies", addedData)
+         .then(res => {
+           let newList = props.movies;
+           
+           newList = [...newList,addedData]
+           
+          props.setMovieList(newList);
+           props.history.push('/')
+         })
+         .catch(err => console.log(err));
+      
          
-          
+     
           // clears out the input values
           setNewMovie({id: null,
             title: '',
             director: '',
             metascore: null,
-            stars: []
+            stars: ""
         });
     }
 
-    const handleChangeStar = (e) => {
-       
-        setNewStar(e.targetValue)
-        
-        }
    
-   const onHandleStars = (e)=>{
-     setStars([...stars,newStar]);
-
-   }
          
       
-    console.log("star added:", newStar)
+    
 
-
-
-console.log("List of Stars:")
-console.log(stars);
   return (
+  
+    
     <form onSubmit={handleSubmit(onHandleSubmit)}>
       <label>Title</label>
       <input
@@ -113,26 +112,17 @@ console.log(stars);
       />
       {errors.metascore && <p>This field is required</p>}
 
-      {/* <label>Stars</label>
+      
       <input
         name="stars"
         value={newMovie.stars}
         placeholder="Stars"
+        onChange={handleChange}
         ref={register({ required: true })}
-      /> */}
-      {/* {errors.stars && <p>This field is required</p>} */}
-      <form onSubmit={handleSubmit(onHandleStars)}>
-      <label>Stars</label>
-      <input
-        name="stars"
-        value={newStar}
-        onChange={handleChangeStar}
-        placeholder="Stars"
-        ref={register({ required: true })}
-      /> 
-      <button type="submit">Add Star</button>
-      </form>
-      <input type="submit" />
+      />
+      {errors.stars && <p>This field is required</p>}
+    <input type="submit" /> 
     </form>
+    
   );
 }
